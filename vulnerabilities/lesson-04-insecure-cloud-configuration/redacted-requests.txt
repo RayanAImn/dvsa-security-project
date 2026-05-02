@@ -1,0 +1,1 @@
+aws <service> <command> --region us-east-1 --resource <REDACTED_RESOURCE>

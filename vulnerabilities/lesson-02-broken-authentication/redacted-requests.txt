@@ -1,0 +1,4 @@
+GET /Stage/order HTTP/1.1
+Host: <api-id>.execute-api.us-east-1.amazonaws.com
+Authorization: Bearer <REDACTED_JWT>
+Cookie: session=<REDACTED_SESSION>

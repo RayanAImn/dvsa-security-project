@@ -1,0 +1,1 @@
+Document the post-fix safe error handling here.

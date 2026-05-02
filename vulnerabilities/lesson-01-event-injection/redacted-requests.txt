@@ -1,0 +1,6 @@
+POST event payload:
+{
+  "source": "lab-client",
+  "type": "REDACTED_TEST_EVENT",
+  "detail": "<REDACTED_PAYLOAD>"
+}

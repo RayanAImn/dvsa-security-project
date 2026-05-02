@@ -1,0 +1,2 @@
+GET /Stage/resource/<REDACTED_ID> HTTP/1.1
+Authorization: Bearer <REDACTED_JWT>

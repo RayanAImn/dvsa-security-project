@@ -1,0 +1,4 @@
+Request body that triggered the exception:
+{
+  "field": "<REDACTED_BAD_VALUE>"
+}

@@ -1,0 +1,5 @@
+POST /Stage/workflow
+{
+  "state": "<REDACTED_STATE>",
+  "amount": "<REDACTED_VALUE>"
+}

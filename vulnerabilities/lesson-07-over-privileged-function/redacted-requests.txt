@@ -1,0 +1,3 @@
+IAM policy review:
+- Action: <REDACTED_ACTION>
+- Resource: <REDACTED_RESOURCE>

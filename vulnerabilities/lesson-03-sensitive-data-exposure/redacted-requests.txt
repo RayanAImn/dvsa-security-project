@@ -1,0 +1,6 @@
+Response excerpt:
+{
+  "email": "<REDACTED_EMAIL>",
+  "accountId": "<ACCOUNT_ID>",
+  "token": "<REDACTED>"
+}

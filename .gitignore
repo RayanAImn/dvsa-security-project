@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+aws-credentials*
+credentials*
+secrets*
+
+# Tokens and dumps
+*.log
+*.tmp
+*.bak
+*.swp
+*.zip
+*.tar
+*.gz
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / Python
+node_modules/
+__pycache__/
+*.pyc
+
+# Local reports or captures that may contain sensitive material
+cloudwatch-export/
+raw-logs/
+unredacted/
