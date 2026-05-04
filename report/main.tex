@@ -16,27 +16,73 @@
 
 \setlist[itemize]{noitemsep, topsep=2pt}
 \setlist[enumerate]{noitemsep, topsep=2pt}
-\renewcommand{\arraystretch}{1.15}
+\renewcommand{\arraystretch}{1.18}
 \setlength{\emergencystretch}{3em}
 \sloppy
 
-\title{DVSA Vulnerability Discovery and Remediation}
-\author{ICS-344 Information Security Course Project\\King Fahd University of Petroleum and Minerals (KFUPM)}
-\date{Term 252}
+\newcommand{\analysistables}[9]{
+\subsubsection*{Table A}
+{\footnotesize
+\begin{longtable}{@{}p{0.13\textwidth}p{0.18\textwidth}p{0.17\textwidth}p{0.16\textwidth}p{0.16\textwidth}@{}}
+\toprule
+Vulnerability & Intended Rule(s) & Artifacts Used to Infer Rule & Normal Behavior Evidence & Exploit Behavior Evidence \\
+\midrule
+#1 & #2 & #3 & #4 & #5 \\
+\bottomrule
+\end{longtable}
+}
+
+\subsubsection*{Table B}
+{\footnotesize
+\begin{longtable}{@{}p{0.13\textwidth}p{0.18\textwidth}p{0.13\textwidth}p{0.18\textwidth}p{0.16\textwidth}@{}}
+\toprule
+Vulnerability & Why This Is a Deviation & Deviation Class & Fix Applied (Where) & Post-Fix Verification \\
+\midrule
+#1 & #6 & #7 & #8 & #9 \\
+\bottomrule
+\end{longtable}
+}
+}
 
 \begin{document}
 
-\maketitle
+\begin{titlepage}
+\centering
+{\Large ICS-344: Information Security\par}
+\vspace{0.4cm}
+{\LARGE DVSA Vulnerability Discovery and Remediation\par}
+\vspace{0.6cm}
+{\large Course Project Report\par}
+\vfill
+\begin{tabular}{p{0.30\textwidth}p{0.60\textwidth}}
+Course / Section: & ICS-344 / Term 252 \\
+Student Name(s) + ID(s): & Team 17. Replace with the actual student names and IDs before final graded submission. \\
+Your DVSA Website URL: & \url{https://<redacted-dvsa-site-url>} \\
+AWS Region: & \texttt{us-east-1} \\
+Date: & 5 May 2026 \\
+Vulnerability Title(s): & Lessons 1 through 10 from the official DVSA project brief \\
+\end{tabular}
+\vfill
+\begin{minipage}{0.92\textwidth}
+\small
+This repository version keeps secrets, account identifiers, JWTs, and private URLs redacted. The public report is structured to match the assignment template while preserving the course requirement that DVSA be used only in a legal non-production lab environment.
+\end{minipage}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
 
 \section*{Project Context}
+\addcontentsline{toc}{section}{Project Context}
 
-This report is the written submission for the ICS-344 Information Security course project at King Fahd University of Petroleum and Minerals (KFUPM). The project description requires students to deploy OWASP DVSA in a controlled non-production AWS environment, investigate the 10 official vulnerability lessons, document reproduction evidence, apply or describe fixes, and verify post-fix behavior.
+This report follows the project requirements in \texttt{project\_description/Project Description.pdf}. The scope is the 10 official DVSA lessons. For each lesson, the report presents the intended workflow, the vulnerability, the exploit path, the impact, the remediation, and the post-fix verification. The supporting repository artifacts are organized under \texttt{vulnerabilities/}, \texttt{fixes/}, \texttt{screenshots/}, \texttt{diagrams/}, \texttt{scripts/}, \texttt{report/}, \texttt{presentation/}, and \texttt{videos/}.
 
-The DVSA environment used for this submission is a serverless AWS application in \texttt{us-east-1}. The main services involved are Amazon S3, API Gateway, AWS Lambda, DynamoDB, SQS, SES, IAM, CloudWatch, and CloudTrail. All sensitive values in the repository are redacted, including JWTs, AWS account IDs, credentials, email addresses, and private URLs.
+The DVSA lab environment represented in this repository is an AWS serverless application using Amazon S3, API Gateway, AWS Lambda, DynamoDB, SQS, SES, IAM, CloudWatch, and CloudTrail. All testing was intended for a controlled educational environment only.
 
 \section*{Deliverables Check}
+\addcontentsline{toc}{section}{Deliverables Check}
 
-\begin{longtable}{p{0.24\textwidth}p{0.56\textwidth}p{0.12\textwidth}}
+\begin{longtable}{p{0.27\textwidth}p{0.49\textwidth}p{0.14\textwidth}}
 \toprule
 Required deliverable & Repository location & Status \\
 \midrule
@@ -47,409 +93,628 @@ Demo video recording & Google Drive link in \texttt{videos/README.md} & Linked \
 \bottomrule
 \end{longtable}
 
-\section*{Repository Validation}
+\clearpage
+\section{Lesson 1: Event Injection}
 
-Each official lesson folder contains a README with the required 10-part structure, a redacted request file, fix artifacts, and screenshot evidence. Source reports are included for lessons where the team produced separate DOCX or PDF material.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates event injection in the DVSA order API path. The affected component is the API Gateway to Lambda request-processing workflow. A crafted payload can make backend code treat attacker-controlled content as executable behavior instead of plain data, which can lead to code execution in the lab Lambda context.
 
-\begin{longtable}{p{0.07\textwidth}p{0.28\textwidth}p{0.18\textwidth}p{0.18\textwidth}p{0.13\textwidth}}
-\toprule
-No. & Lesson & README status & Screenshot evidence & Fix files \\
-\midrule
-1 & Event Injection & 10 parts present & 6 files & 5 files \\
-2 & Broken Authentication & 10 parts present & 8 extracted report images & 3 files \\
-3 & Sensitive Data Exposure & 10 parts present & 10 files & 5 files \\
-4 & Insecure Cloud Configuration & 10 parts present & 12 extracted report images & 3 files \\
-5 & Broken Access Control & 10 parts present & 3 extracted report images & 3 files \\
-6 & Denial of Service & 10 parts present & 8 named screenshots & 3 files \\
-7 & Over-Privileged Function & 10 parts present & 10 named screenshots & 3 files \\
-8 & Logic Vulnerabilities & 10 parts present & 13 extracted report images & 3 files \\
-9 & Vulnerable Dependencies & 10 parts present & 6 files & 5 files \\
-10 & Unhandled Exceptions & 10 parts present & 2 extracted report images & 3 files \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 2) Why This Works / Root Cause}
+The root cause is unsafe deserialization or dynamic handling of user-controlled input. If the handler or one of its dependencies accepts serialized functions or evaluates request data as code, the Lambda runtime can execute unintended logic before normal validation completes.
 
-\section*{Lesson 1: Event Injection}
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Entry point: \texttt{/dvsa/order}
+\item Backend path: order-processing Lambda workflow
+\item Evidence sources: \texttt{vulnerabilities/lesson-01-event-injection/report-source.pdf}, CloudWatch log proof, and \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to show that the DVSA order API can mishandle attacker-controlled event data. The affected path is API Gateway to the order-processing Lambda. A crafted request can make data behave like executable backend logic.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Locate the API Gateway invoke URL used by the DVSA frontend.
+\item Append the order path and send a crafted JSON payload containing the event-injection marker.
+\item Observe the client response, which may be a generic internal error.
+\item Open CloudWatch logs for the order Lambda.
+\item Confirm that backend-side execution evidence appears in the logs.
+\end{enumerate}
 
-\subsection*{Part 2: Root Cause}
-The root cause is unsafe deserialization or dynamic handling of request-controlled input. The backend trusted structured request data without ensuring that it remained plain JSON data.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{vulnerabilities/lesson-01-event-injection/report-source.pdf} contains the imported evidence package.
+\item \texttt{vulnerabilities/lesson-01-event-injection/redacted-requests.txt} stores the sanitized payload shape.
+\item \texttt{screenshots/lesson-01/} stores endpoint discovery, exploit request, normal response, exploit evidence, and post-fix request screenshots.
+\item CloudWatch is the primary proof source because API Gateway may hide backend execution behind a generic error.
+\end{itemize}
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the DVSA order endpoint in \texttt{us-east-1}, the order Lambda workflow, CloudWatch logs, and redacted payloads in \texttt{vulnerabilities/lesson-01-event-injection/redacted-requests.txt}.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+The fix belongs in the request parsing path. Remove unsafe deserialization, parse requests as strict JSON, and validate all fields against an allowlisted schema. User input must never be evaluated as code.
 
-\subsection*{Part 4: Reproduction Steps}
-The reproduction locates the API Gateway endpoint, submits a crafted event-injection payload, observes the client response, and checks CloudWatch for backend execution evidence.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-01/before-code.txt}: vulnerable request-handling pattern
+\item \texttt{fixes/lesson-01/after-code.txt}: safe parsing and validation pattern
+\item \texttt{fixes/lesson-01/before-example.txt} and \texttt{after-example.txt}: behavior comparison
+\item \texttt{fixes/lesson-01/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-01/}, including endpoint discovery, the code injection request, normal server response, exploit evidence, and post-fix request evidence. The source evidence PDF is stored as \texttt{vulnerabilities/lesson-01-event-injection/report-source.pdf}.
+\subsection*{Part 8) Verification After Fix}
+Repeat the crafted payload. The fixed backend should reject it as invalid input, and CloudWatch should no longer show injected code execution. Normal order handling should still work with valid data.
 
-\subsection*{Part 6: Fix Strategy}
-The fix is to remove unsafe deserialization, parse input with safe JSON parsing, and validate request fields with an allowlisted schema.
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 01: Event Injection}
+{Request data must remain data and must never execute inside the Lambda handler.}
+{API payload, CloudWatch logs, source report PDF, and screenshot evidence.}
+{Normal order requests follow the expected handler path and complete without injected behavior.}
+{The crafted event causes backend execution evidence in CloudWatch.}
+{The backend executed behavior derived from request data, which violates the intended separation between data and code.}
+{Intentional misuse / security-relevant abuse}
+{Safe JSON parsing and schema validation in the order request path.}
+{The crafted payload is rejected and no backend execution evidence remains.}
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after examples are stored in \texttt{fixes/lesson-01/}. The after state treats the payload as data and rejects unsupported fields.
+\subsection*{Part 10) Takeaway / Lessons Learned}
+Serverless functions still execute ordinary application code with cloud permissions. Unsafe parsing can turn a simple API request into backend code execution, so input must be treated strictly as data.
 
-\subsection*{Part 8: Verification After Fix}
-The same crafted payload is repeated. The fixed backend rejects it as invalid input and CloudWatch no longer shows injected code execution.
+\clearpage
+\section{Lesson 2: Broken Authentication}
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Request data must never execute inside Lambda. & Attacker-controlled serialized content reached backend execution. & Payload rejected without backend execution evidence. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates broken JWT authentication in the DVSA order workflow. The backend can trust a forged or modified token if it uses decoded claims without complete verification. The impact is user impersonation and unauthorized access to another user's order data.
 
-\subsection*{Part 10: Takeaway}
-Serverless input parsing must treat request bodies as data only. Unsafe parsing can turn an API request into backend code execution.
+\subsection*{Part 2) Why This Works / Root Cause}
+JWT claims are visible to the client and can be edited. The weakness occurs when the backend uses identity fields such as \texttt{username} or \texttt{sub} without verifying the token signature, issuer, audience, expiry, and trusted subject.
 
-\section*{Lesson 2: Broken Authentication}
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Endpoint: DVSA order API
+\item Users: one attacker account and one victim account in the lab
+\item Tools: browser DevTools, decoded JWT inspection, and direct API testing
+\item Evidence source: \texttt{vulnerabilities/lesson-02-broken-authentication/report-source.docx}
+\end{itemize}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate broken JWT authentication in the DVSA order workflow. A forged or modified token can be used to impersonate another user if the backend trusts decoded claims without complete verification.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Create or identify two lab users and place at least one order for each.
+\item Capture a valid JWT from the attacker account through DevTools.
+\item Inspect or decode the token to identify the identity claims.
+\item Modify the forged token payload to use the victim identity claim.
+\item Send the forged request to the order API.
+\item Observe unauthorized access to the victim user's order data.
+\end{enumerate}
 
-\subsection*{Part 2: Root Cause}
-JWT claims are client-visible and can be edited. The weakness occurs when the backend uses identity fields such as username or subject without verifying signature, issuer, audience, expiry, and trusted subject.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-02/from-report/} contains 8 extracted screenshots from the source report.
+\item \texttt{vulnerabilities/lesson-02-broken-authentication/redacted-requests.txt} stores the sanitized request pattern.
+\item The proof condition is that a forged token returns data belonging to another user.
+\end{itemize}
 
-\subsection*{Part 3: Environment and Setup}
-The test uses two DVSA lab users, browser DevTools, the order API, JWT payload inspection, and the imported Lesson 2 source report in \texttt{vulnerabilities/lesson-02-broken-authentication/report-source.docx}.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+The fix belongs in the backend order-authentication path. The server must verify token integrity and trusted claims before using identity. Invalid signatures, wrong issuer or audience, expired tokens, and inconsistent subject claims must be rejected.
 
-\subsection*{Part 4: Reproduction Steps}
-Create orders for two users, capture a valid user token, modify the identity claim, send the forged request to the order API, and observe unauthorized access to another user's order data.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-02/before-order-manager.js}: vulnerable pattern that trusts decoded claims
+\item \texttt{fixes/lesson-02/after-order-manager.js}: verified JWT pattern using trusted claims
+\item \texttt{fixes/lesson-02/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-02/from-report/} with 8 extracted images from the source report. The sanitized request pattern is stored in \texttt{redacted-requests.txt}.
+\subsection*{Part 8) Verification After Fix}
+Repeat the forged-token request. It should be rejected, while a valid user token should still return only that user's own orders.
 
-\subsection*{Part 6: Fix Strategy}
-The backend must verify token integrity and trusted claims before using identity. Invalid signatures, wrong issuer or audience, expired tokens, and inconsistent subject claims must be rejected.
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 02: Broken Authentication}
+{Only verified identity claims may authorize order access.}
+{Browser workflow, JWT payload inspection, API request and response evidence, and source-report screenshots.}
+{A valid user token returns only that user's own order data.}
+{A forged token returns another user's order data.}
+{Caller-controlled claims were treated as proof of identity even though they were not cryptographically verified.}
+{Intentional misuse / security-relevant abuse}
+{JWT signature and claim verification in the backend order-access path.}
+{Forged tokens are rejected and valid tokens still return only the caller's own data.}
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after authentication examples are stored in \texttt{fixes/lesson-02/}. The fix moves trust from decoded payload fields to verified backend identity.
-
-\subsection*{Part 8: Verification After Fix}
-The forged-token request is repeated. It is rejected, while a valid user token still returns only that user's own orders.
-
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Only verified identity claims may authorize order access. & Caller-controlled claims were treated as proof of identity. & Forged token rejected; normal token still works. \\
-\bottomrule
-\end{longtable}
-
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Decoding a JWT is not authentication. The backend must verify the token before trusting any claim.
 
-\section*{Lesson 3: Sensitive Data Exposure}
+\clearpage
+\section{Lesson 3: Sensitive Data Exposure}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to show that DVSA receipt or storage workflows can expose private data through API responses, generated files, logs, or object access.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson shows that DVSA receipt or storage workflows can expose private data through API responses, generated files, logs, or object access. The main impact is disclosure of user receipt or order-related information outside the intended ownership boundary.
 
-\subsection*{Part 2: Root Cause}
-The root cause is weak authorization and data minimization around receipt-related data. Receipt content or links were exposed without sufficiently proving ownership.
+\subsection*{Part 2) Why This Works / Root Cause}
+The root cause is weak authorization and weak data minimization around receipt-related data. If the backend exposes receipt content or access links without checking ownership, users can access information outside their intended boundary.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses API Gateway, Lambda, DynamoDB, S3 receipt objects, CloudWatch, and the Lesson 3 source report at \texttt{vulnerabilities/lesson-03-sensitive-data-exposure/report-source.pdf}.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Services: API Gateway, Lambda, DynamoDB, S3 receipts, and CloudWatch
+\item Evidence source: \texttt{vulnerabilities/lesson-03-sensitive-data-exposure/report-source.pdf}
+\item Supporting artifacts: redacted request samples and screenshot evidence
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Create normal receipt/order data, trigger the vulnerable receipt path, capture the exposed response or object evidence, and redact identifiers before storing proof.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Create normal receipt or order data in the lab.
+\item Trigger the vulnerable receipt path or API response path.
+\item Capture the exposed response, file, or object evidence.
+\item Confirm that the accessed data should belong only to the owner.
+\item Redact identifiers before storing the proof.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-03/}, including account creation, token capture, API endpoint discovery, DynamoDB order evidence, sensitive file evidence, malicious request evidence, and post-fix results.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-03/} contains endpoint discovery, token capture, DynamoDB evidence, sensitive file evidence, exploit evidence, and post-fix results.
+\item \texttt{vulnerabilities/lesson-03-sensitive-data-exposure/redacted-requests.txt} stores the sanitized request or response sample.
+\item The exploit is proven when receipt data or receipt access becomes available without proper ownership checks.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
-Add ownership checks before returning receipt data or signed URLs. Keep receipt objects private, return only necessary fields, and issue short-lived access only after authorization.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+Add ownership checks before returning receipt data or signed URLs. Keep receipt objects private, generate short-lived access only after authorization, and avoid returning unnecessary sensitive fields.
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after examples are stored in \texttt{fixes/lesson-03/}. The after state restricts access to authorized owners and removes unnecessary sensitive output.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-03/before-code.txt} and \texttt{after-code.txt}: pre-fix and post-fix behavior
+\item \texttt{fixes/lesson-03/before-example.txt} and \texttt{after-example.txt}: evidence-oriented comparison
+\item \texttt{fixes/lesson-03/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the unauthorized receipt access attempt. The fixed system denies or sanitizes the response while legitimate owner access still works.
+\subsection*{Part 8) Verification After Fix}
+Repeat the receipt access attempt as an unauthorized user. The response should be denied or sanitized, while the legitimate owner can still access the correct receipt data.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Users may access only their own receipt data. & Private data or links crossed the ownership boundary. & Unauthorized access denied or sanitized. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 03: Sensitive Data Exposure}
+{Users may access only their own receipt data and only the minimum required fields should leave the backend.}
+{API responses, receipt objects, source report PDF, screenshots, and redacted request patterns.}
+{Authorized owner access returns the expected receipt information only.}
+{Private receipt data or links become visible outside the ownership boundary.}
+{Private data crossed the authorization boundary because the backend exposed more than it should.}
+{Intentional misuse / security-relevant abuse}
+{Ownership checks and private receipt access controls in the receipt retrieval path.}
+{Unauthorized access is denied or sanitized, while owner access still works.}
 
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Sensitive data controls must be enforced where data leaves the backend, not only where it is stored.
 
-\section*{Lesson 4: Insecure Cloud Configuration}
+\clearpage
+\section{Lesson 4: Insecure Cloud Configuration}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate that insecure S3 configuration can allow untrusted files into the DVSA receipt-processing workflow.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates that insecure S3 configuration can allow untrusted files into the DVSA receipt-processing workflow. The affected component is the receipts bucket and its trust relationship with downstream Lambda processing. The impact is that a storage misconfiguration becomes a backend attack path.
 
-\subsection*{Part 2: Root Cause}
-The root cause is permissive S3 access combined with Lambda processing that trusts bucket contents. If an unauthorized principal can write receipt-like objects, backend processing may treat them as legitimate.
+\subsection*{Part 2) Why This Works / Root Cause}
+The root cause is weak S3 public-access or bucket-policy configuration combined with Lambda processing that trusts bucket contents. If unauthorized users can place objects where Lambda expects application-generated receipts, the backend processes untrusted input.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the receipts S3 bucket, the receipt-processing Lambda path, AWS Console or CLI checks, and the imported source report in \texttt{vulnerabilities/lesson-04-insecure-cloud-configuration/report-source.docx}.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item AWS services: S3 bucket, Lambda receipt-processing path, AWS Console or CLI
+\item Evidence source: \texttt{vulnerabilities/lesson-04-insecure-cloud-configuration/report-source.docx}
+\item Supporting artifact: \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Inspect S3 permissions, attempt a controlled upload of a receipt-like object, observe backend processing, and capture S3 and Lambda evidence.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Inspect the receipt bucket permissions and public-access settings.
+\item Attempt a controlled upload of a receipt-like object from outside the intended trust boundary.
+\item Observe whether backend processing accepts or reacts to the object.
+\item Capture S3 and Lambda evidence from the lab environment.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-04/from-report/} with 12 extracted screenshots. The sanitized CLI pattern is stored in \texttt{redacted-requests.txt}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-04/from-report/} contains 12 extracted screenshots from the source report.
+\item \texttt{vulnerabilities/lesson-04-insecure-cloud-configuration/redacted-requests.txt} stores the sanitized CLI pattern.
+\item The exploit is proven when unauthorized upload or access reaches the trusted receipt-processing path.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
 Enable S3 Block Public Access, restrict bucket policy and ACLs, validate object keys and file types, and allow only trusted application roles to write objects that trigger Lambda processing.
 
-\subsection*{Part 7: Code / Config Changes}
-Configuration notes are stored in \texttt{fixes/lesson-04/}. The documented fix enables public access blocking and restricts unintended uploads.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-04/before-example.txt}: permissive pre-fix state
+\item \texttt{fixes/lesson-04/after-example.txt}: tightened bucket and workflow controls
+\item \texttt{fixes/lesson-04/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the unauthorized upload or public access attempt. It returns access denied, while the legitimate receipt workflow remains functional.
+\subsection*{Part 8) Verification After Fix}
+Repeat unauthorized upload or access attempts. They should fail, while the legitimate receipt workflow continues to work.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Only trusted roles may write receipt objects processed by Lambda. & The bucket accepted input outside the intended trust boundary. & Unauthorized write or public access fails. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 04: Insecure Cloud Configuration}
+{Only trusted roles and workflows may write receipt objects that the backend processes.}
+{S3 configuration evidence, source report screenshots, CLI patterns, and Lambda workflow context.}
+{Legitimate receipt objects are created and processed only by the intended application workflow.}
+{The bucket accepts input or access beyond the intended trust boundary.}
+{A cloud resource granted more access than the application trust model intended.}
+{Accidental misconfiguration}
+{S3 Block Public Access and restricted bucket policy in the receipt bucket configuration.}
+{Unauthorized write and access attempts fail while legitimate receipt handling remains functional.}
 
-\subsection*{Part 10: Takeaway}
-Cloud configuration is part of application security. A storage misconfiguration can become a backend attack path.
+\subsection*{Part 10) Takeaway / Lessons Learned}
+Cloud configuration is part of application security. A storage misconfiguration can become a backend exploit path when downstream services trust stored content.
 
-\section*{Lesson 5: Broken Access Control}
+\clearpage
+\section{Lesson 5: Broken Access Control}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to show that a normal DVSA user can reach privileged order update behavior that should be restricted to administrative logic.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates broken access control in the DVSA administrative order-update workflow. A normal user can influence privileged order state behavior that should be restricted to administrative logic. The impact is unauthorized order state modification.
 
-\subsection*{Part 2: Root Cause}
-The backend accepts a valid user context but does not enforce the required role or group before sensitive functionality. IAM invoke permissions may also allow public-facing paths to reach internal functions.
+\subsection*{Part 2) Why This Works / Root Cause}
+The backend accepts a valid user context but does not enforce the required role or group before sensitive functionality. In addition, public-facing Lambda invocation permissions may allow external paths to reach internal functions that should be more tightly restricted.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the order API, admin update logic, JWT claims, Lambda invoke permissions, and the imported source report in \texttt{vulnerabilities/lesson-05-broken-access-control/report-source.docx}.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Components: order API, admin update logic, JWT claims, and Lambda invoke permissions
+\item Evidence source: \texttt{vulnerabilities/lesson-05-broken-access-control/report-source.docx}
+\item Supporting artifact: \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Create an order as a normal user, capture the user token and order ID, send a crafted update request toward the privileged path, and observe unauthorized order state modification.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Create an order as a normal user.
+\item Capture the user token and the order identifier.
+\item Send a crafted update request toward the privileged path.
+\item Observe unauthorized order-state modification.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-05/from-report/} with 3 extracted screenshots. The sanitized request example is stored in \texttt{redacted-requests.txt}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-05/from-report/} contains 3 extracted screenshots from the source report.
+\item \texttt{vulnerabilities/lesson-05-broken-access-control/redacted-requests.txt} stores the sanitized request example.
+\item The exploit is proven when a non-admin request changes privileged order state.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
 Enforce admin role checks server-side before privileged updates. Restrict Lambda invoke permissions so public-facing functions cannot invoke arbitrary internal functions.
 
-\subsection*{Part 7: Code / Config Changes}
-Remediation notes are stored in \texttt{fixes/lesson-05/}. The fix combines backend authorization checks with narrower IAM permissions.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-05/before-example.txt}: vulnerable access-control behavior
+\item \texttt{fixes/lesson-05/after-example.txt}: corrected authorization and invoke scope
+\item \texttt{fixes/lesson-05/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the normal-user privileged update attempt. It is denied, while normal order creation and billing still work.
+\subsection*{Part 8) Verification After Fix}
+Repeat the normal-user privileged update attempt. It should fail, while legitimate order creation and billing continue to work.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Only authorized admin logic may update privileged order state. & A non-admin reached admin behavior. & Unauthorized update denied; normal workflow preserved. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 05: Broken Access Control}
+{Only authorized administrative workflow may update privileged order state.}
+{JWT claims, API request evidence, Lambda behavior, report screenshots, and remediation notes.}
+{A normal user can create an order and use only the intended user workflow.}
+{A normal user reaches privileged update behavior and changes restricted state.}
+{The application authenticated the caller but did not authorize the sensitive action correctly.}
+{Intentional misuse / security-relevant abuse}
+{Admin role checks and narrowed Lambda invoke permissions in the admin update path.}
+{Unauthorized update attempts are denied and the normal order workflow still works.}
 
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Authentication proves who the caller is. Authorization still has to decide what that caller may do.
 
-\section*{Lesson 6: Denial of Service}
+\clearpage
+\section{Lesson 6: Denial of Service}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate that repeated or concurrent billing requests can reduce availability in the DVSA order workflow. The affected function is \texttt{DVSA-ORDER-BILLING}.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates a denial-of-service condition in the DVSA billing workflow. The affected path is the \texttt{/dvsa/order} billing action, which reaches the \texttt{DVSA-ORDER-BILLING} Lambda function. Repeated billing requests can consume backend processing capacity and reduce availability for legitimate users.
 
-\subsection*{Part 2: Root Cause}
-The billing path performs backend work for each request and did not sufficiently limit repeated or concurrent requests at the API edge or function layer.
+\subsection*{Part 2) Why This Works / Root Cause}
+The vulnerable design does not sufficiently limit repeated or concurrent billing requests at the API edge. The billing path performs backend work for each request and depends on limited Lambda and API Gateway capacity. Without throttling, idempotency, or per-user controls, a small burst of duplicate requests can degrade the backend.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the \texttt{/dvsa/order} billing action, API Gateway, Lambda metrics, CloudWatch logs, PowerShell request tests, and redacted JWTs.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item API endpoint: \texttt{https://<api-id>.execute-api.us-east-1.amazonaws.com/dvsa/order}
+\item Action: \texttt{billing}
+\item Backend function: \texttt{DVSA-ORDER-BILLING}
+\item Evidence sources: browser workflow, PowerShell or curl output, CloudWatch logs, Lambda metrics, and API Gateway throttling settings
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Confirm normal checkout, capture the billing request, send a baseline request, run a controlled repeated request test, run a controlled 10-job parallel test, and compare HTTP results and backend metrics.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Confirm the normal billing and order workflow works from the DVSA frontend.
+\item Capture the billing request from browser DevTools.
+\item Send one baseline billing request with the captured request body and a redacted Authorization header.
+\item Run a controlled repeated-request test with a small serialized count.
+\item Run a controlled parallel-job test against the same lab endpoint.
+\item Compare returned status codes and response bodies.
+\item Open CloudWatch and Lambda metrics for \texttt{DVSA-ORDER-BILLING} to confirm backend impact.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-06/}. Screenshots 6.1 through 6.8 show normal workflow, captured request details, repeated request output, Lambda metrics, CloudWatch logs, and API Gateway throttling.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-06/} contains screenshots for normal workflow, captured request details, repeated-request output, Lambda metrics, CloudWatch logs, and API Gateway throttling.
+\item The controlled parallel test produced mixed \texttt{200}, \texttt{500}, and \texttt{502} responses.
+\item Mixed backend failures during a small parallel burst show that duplicate billing requests can degrade availability.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
-Apply API Gateway throttling and backend idempotency or rate-control checks so duplicate billing attempts are rejected cheaply and consistently.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+The fix belongs at both the API Gateway and backend workflow layers. API Gateway should enforce throttling so small bursts do not reach Lambda unchecked. The billing function should also be made idempotent per order and user so duplicate billing attempts are rejected cheaply and consistently.
 
-\subsection*{Part 7: Code / Config Changes}
-Before, after, and explanation files are stored in \texttt{fixes/lesson-06/}. The documented control is throttling plus billing idempotency.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-06/before-example.txt}: pre-fix repeated-request behavior
+\item \texttt{fixes/lesson-06/after-example.txt}: post-fix throttling and idempotency behavior
+\item \texttt{fixes/lesson-06/explanation.md}: mitigation summary
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the controlled test. Excess requests should be throttled or rejected cleanly while normal checkout still succeeds.
+\subsection*{Part 8) Verification After Fix}
+Repeat the same controlled test after throttling and idempotency controls are applied. Excess requests should be throttled or rejected cleanly instead of causing backend instability. The normal checkout workflow should still work for legitimate users.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Billing must degrade safely under duplicate or burst requests. & A small parallel burst produced mixed 200, 500, and 502 responses. & Throttling evidence and normal checkout confirmation. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 06: Denial of Service}
+{Billing requests should be processed fairly, and duplicate or concurrent bursts should not exhaust backend capacity.}
+{Browser flow, captured API request, PowerShell output, CloudWatch logs, Lambda metrics, and API Gateway throttling settings.}
+{Normal billing workflow screenshots and baseline single-request evidence.}
+{Parallel repeated-request evidence showing mixed \texttt{200}, \texttt{500}, and \texttt{502} results.}
+{A small burst of concurrent requests caused backend instability instead of controlled throttling or graceful rejection.}
+{Intentional misuse / security-relevant abuse}
+{API Gateway throttling plus backend idempotency or rate-control design for billing.}
+{Excess requests are throttled or rejected cleanly while normal checkout still succeeds.}
 
-\subsection*{Part 10: Takeaway}
-Availability is a security property. Critical serverless workflows need throttling, idempotency, and graceful failure.
+\subsection*{Part 10) Takeaway / Lessons Learned}
+Availability is a security property. Critical serverless workflows need throttling, idempotency, and graceful failure under burst conditions.
 
-\section*{Lesson 7: Over-Privileged Function}
+\clearpage
+\section{Lesson 7: Over-Privileged Function}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate that the \texttt{DVSA-SEND-RECEIPT-EMAIL} Lambda execution role had permissions broader than the receipt-email workflow required.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates an over-privileged Lambda execution role. The affected function is \texttt{DVSA-SEND-RECEIPT-EMAIL}, whose role originally included permissions broader than the receipt-email workflow requires. The impact is increased blast radius because any code running inside the function inherits the role's temporary credentials.
 
-\subsection*{Part 2: Root Cause}
-Lambda code runs with execution-role credentials. If a role allows broad access, any abused function path can use those unrelated permissions, increasing blast radius.
+\subsection*{Part 2) Why This Works / Root Cause}
+Lambda functions run with execution-role credentials provided by AWS. If a function role allows broad access, a compromised or abused function can perform every action allowed by that role, even when those actions are unrelated to the function's intended purpose. The root cause is failure to apply least privilege.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses Lambda, IAM, SES, S3, DynamoDB, CloudWatch, IAM Policy Simulator, and redacted role/policy examples.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Function: \texttt{DVSA-SEND-RECEIPT-EMAIL}
+\item Services involved: Lambda, IAM, SES, S3, DynamoDB, CloudWatch, and IAM Policy Simulator
+\item Supporting evidence: screenshots and redacted IAM policy examples
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Open the receipt Lambda, inspect its execution role and attached policies, simulate SES/S3/DynamoDB actions, replace broad permissions with least privilege, rerun simulator checks, and confirm normal order workflow.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Open AWS Lambda and locate \texttt{DVSA-SEND-RECEIPT-EMAIL}.
+\item Open the function permissions tab and follow the execution-role link.
+\item Review attached policies for broad actions such as \texttt{ses:*} or wildcard resources.
+\item Open IAM Policy Simulator and test representative SES, S3, and DynamoDB actions.
+\item Record which actions are allowed before the fix.
+\item Replace the broad policy with a least-privilege policy.
+\item Re-run the simulator and confirm unnecessary actions are denied.
+\item Run the normal DVSA order workflow to confirm legitimate receipt behavior still works.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-07/}. It includes Lambda page, execution role, broad SES policy, simulator checks, post-fix simulation, and normal workflow screenshots. The blast-radius diagram is in \texttt{diagrams/lesson-07-blast-radius.png}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-07/} contains Lambda page, execution-role page, broad SES evidence, simulator checks, post-fix simulation, and normal workflow screenshots.
+\item \texttt{diagrams/lesson-07-blast-radius.png} shows the blast-radius analysis.
+\item \texttt{fixes/lesson-07/before-policy.json} and \texttt{after-policy.json} provide the policy comparison.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
-Remove broad managed policies and wildcard resources. Allow only the minimum CloudWatch logging and SES send permissions needed for the receipt workflow.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+The fix belongs in the Lambda execution role. Broad managed policies and wildcard-resource permissions should be removed. The replacement policy should allow only the actions required for the receipt workflow, together with minimum CloudWatch logging permissions.
 
-\subsection*{Part 7: Code / Config Changes}
-The before and after IAM policy examples are stored in \texttt{fixes/lesson-07/before-policy.json} and \texttt{fixes/lesson-07/after-policy.json}.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-07/before-policy.json}: broad pre-fix IAM policy
+\item \texttt{fixes/lesson-07/after-policy.json}: least-privilege target policy
+\item \texttt{fixes/lesson-07/explanation.md}: remediation and verification notes
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-IAM Policy Simulator shows unrelated actions denied, and normal order/receipt behavior still works.
+\subsection*{Part 8) Verification After Fix}
+After applying the least-privilege policy, re-run IAM Policy Simulator checks for unnecessary SES, S3, and DynamoDB actions. Broad or unrelated actions should be denied, and the normal order and receipt workflow should still work.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-The receipt function may use only permissions required for receipts and logs. & Broad permissions increased blast radius. & Simulator denial results plus normal workflow evidence. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 07: Over-Privileged Function}
+{The receipt-email function should have only the permissions required to send receipts and write logs.}
+{Lambda permissions page, IAM role policies, IAM Policy Simulator, screenshot evidence, and the blast-radius diagram.}
+{Normal order and receipt workflow still works after the IAM fix.}
+{Broad SES and unrelated service access were allowed before the fix.}
+{The role allowed actions broader than the function required, increasing blast radius if the function was abused.}
+{Accidental misconfiguration}
+{Least-privilege IAM policy on the \texttt{DVSA-SEND-RECEIPT-EMAIL} execution role.}
+{IAM Policy Simulator denies unrelated actions and the normal workflow still works.}
 
-\subsection*{Part 10: Takeaway}
-The Lambda execution role is a serverless security boundary. Least privilege limits damage when function code is abused.
+\subsection*{Part 10) Takeaway / Lessons Learned}
+In serverless systems, the function role is a security boundary. Least privilege reduces blast radius so one function issue does not become broad access to unrelated AWS services.
 
-\section*{Lesson 8: Logic Vulnerabilities}
+\clearpage
+\section{Lesson 8: Logic Vulnerabilities}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate a business logic race condition where billing and order update operations can be submitted close together, producing inconsistent order state.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates a business-logic race condition in the DVSA order workflow. Billing and order-update operations can be submitted close together, producing inconsistent order state. The impact is that the final order state can differ from what was billed.
 
-\subsection*{Part 2: Root Cause}
-The root cause is a non-atomic read/check/write sequence. Billing trusted state that could change before the final write.
+\subsection*{Part 2) Why This Works / Root Cause}
+The root cause is a non-atomic read, check, and write sequence. Billing trusted order state that could change before the final write completed.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses \texttt{DVSA-ORDER-BILLING}, \texttt{DVSA-ORDER-UPDATE}, DynamoDB order state, and the imported Lesson 8 source report.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Components: \texttt{DVSA-ORDER-BILLING}, \texttt{DVSA-ORDER-UPDATE}, and DynamoDB order state
+\item Evidence source: \texttt{vulnerabilities/lesson-08-logic-vulnerabilities/report-source.docx}
+\item Supporting artifact: \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Create an order, submit billing and update requests close together, inspect charged amount and final order state, and compare expected state with actual state.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Create an order in the DVSA lab.
+\item Submit billing and update requests close together.
+\item Inspect the charged amount and final order state.
+\item Compare the expected consistent state with the actual state that was stored.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-08/from-report/} with 13 extracted screenshots from \texttt{report-source.docx}. A sanitized workflow request is stored in \texttt{redacted-requests.txt}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-08/from-report/} contains 13 extracted screenshots from the source report.
+\item \texttt{vulnerabilities/lesson-08-logic-vulnerabilities/redacted-requests.txt} stores the sanitized workflow request.
+\item The exploit is proven when conflicting operations leave the order in a state inconsistent with the intended workflow.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
-Use DynamoDB conditional writes or transactions for order state transitions. Lock or reject updates after billing begins.
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
+Use DynamoDB conditional writes or transactions for order state transitions. Lock or reject updates after billing begins so conflicting state transitions cannot both succeed.
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after state-management examples are stored in \texttt{fixes/lesson-08/}. The fix adds a conditional expression to the billing update.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-08/before-example.txt}: pre-fix state-management behavior
+\item \texttt{fixes/lesson-08/after-example.txt}: post-fix conditional-write behavior
+\item \texttt{fixes/lesson-08/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the timing test. One operation succeeds cleanly and the conflicting operation is rejected.
+\subsection*{Part 8) Verification After Fix}
+Repeat the timing test. One operation should succeed cleanly, and the conflicting operation should be rejected instead of silently producing inconsistent state.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Billing and order updates must preserve one consistent order state. & State changed inside a timing window trusted by billing. & Conditional write rejects stale or conflicting update. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 08: Logic Vulnerabilities}
+{Billing and order updates must preserve one consistent order state.}
+{Workflow requests, DynamoDB order evidence, source report screenshots, and remediation notes.}
+{Normal workflows produce one consistent billed state for each order.}
+{Near-simultaneous requests leave state inconsistent with the expected billing result.}
+{The workflow trusted state that changed during a race window, so valid requests in the wrong sequence became unsafe.}
+{Intentional misuse / security-relevant abuse}
+{Conditional writes or transactional state checks in the billing and update workflow.}
+{Conflicting operations are rejected and one consistent order state is preserved.}
 
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Valid requests can become unsafe in the wrong sequence. Security-sensitive workflows need atomic state transitions.
 
-\section*{Lesson 9: Vulnerable Dependencies}
+\clearpage
+\section{Lesson 9: Vulnerable Dependencies}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to show that an unsafe Node.js dependency can create backend execution risk in the DVSA order request path.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson shows that an unsafe Node.js dependency can create backend execution risk in the DVSA order request path. The impact is that dependency behavior becomes part of the application attack surface and can support code-execution style exploits.
 
-\subsection*{Part 2: Root Cause}
-The vulnerable package accepts dangerous serialized function markers. Without dependency review, pinning, and scanning, unsafe package behavior becomes part of the application attack surface.
+\subsection*{Part 2) Why This Works / Root Cause}
+The vulnerable package accepts dangerous serialized function markers. Without dependency review, pinning, and scanning, unsafe package behavior becomes part of the deployed application and can enable executable deserialization behavior.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the Node.js Lambda package, order request processing, the Lesson 1/9 source report, and CloudWatch evidence.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Components: Node.js Lambda package or dependency path and order request processing
+\item Evidence source: \texttt{vulnerabilities/lesson-09-vulnerable-dependencies/report-source.pdf}
+\item Supporting artifact: \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Identify the vulnerable dependency, relate package behavior to event injection, demonstrate the behavior in the controlled lab, and document the remediation path.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Identify the vulnerable dependency used in the request path.
+\item Relate the package behavior to the event-injection condition in the lab.
+\item Demonstrate the behavior in the controlled environment.
+\item Document the remediation path by removing or replacing the dependency.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-09/}, including endpoint discovery, injection request, normal response, exploit evidence, and post-fix request evidence. The shared source PDF is stored as \texttt{vulnerabilities/lesson-09-vulnerable-dependencies/report-source.pdf}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-09/} contains endpoint discovery, injection request, normal response, exploit evidence, and post-fix request evidence.
+\item \texttt{vulnerabilities/lesson-09-vulnerable-dependencies/report-source.pdf} stores the source evidence package.
+\item The exploit is proven when dependency behavior supports request-driven backend execution.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
 Remove or replace unsafe packages, use safe JSON parsing, pin reviewed versions, and add dependency scanning to the build and deployment process.
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after dependency remediation examples are stored in \texttt{fixes/lesson-09/}. The fix removes unsafe deserialization from request parsing.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-09/before-code.txt}: vulnerable dependency-driven parsing pattern
+\item \texttt{fixes/lesson-09/after-code.txt}: safe parsing pattern
+\item \texttt{fixes/lesson-09/before-example.txt}, \texttt{after-example.txt}, and \texttt{explanation.md}: remediation evidence
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the injection payload and dependency scan. The payload no longer executes and the risky dependency is absent or remediated.
+\subsection*{Part 8) Verification After Fix}
+Repeat the injection payload and confirm that the risky dependency behavior no longer causes backend execution. Dependency review or scanning should also show that the unsafe package is absent or remediated.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Dependencies must not evaluate attacker-controlled request data. & A third-party package enabled executable deserialization. & Payload rejected and dependency removed or replaced. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 09: Vulnerable Dependencies}
+{Dependencies must not evaluate attacker-controlled request data.}
+{Source report PDF, dependency notes, exploit screenshots, and before or after code examples.}
+{Normal request handling treats request data as plain JSON.}
+{A third-party package enables executable deserialization behavior.}
+{The application inherited unsafe behavior from a dependency, so request data could cross into code execution.}
+{Intentional misuse / security-relevant abuse}
+{Dependency removal or replacement in the request-parsing path, plus safer parsing practice.}
+{The payload no longer executes and the dependency risk is removed or reduced.}
 
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Dependencies are part of the attack surface. Secure code can still fail if unsafe packages are deployed with it.
 
-\section*{Lesson 10: Unhandled Exceptions}
+\clearpage
+\section{Lesson 10: Unhandled Exceptions}
 
-\subsection*{Part 1: Goal and Vulnerability Summary}
-The goal is to demonstrate unsafe exception handling in the DVSA order API. Malformed input can trigger backend exceptions that expose internal details to clients.
+\subsection*{Part 1) Goal and Vulnerability Summary}
+This lesson demonstrates unsafe exception handling in the DVSA order API. Malformed input can trigger backend exceptions that expose internal details to clients. The impact is disclosure of implementation details such as file paths, exception names, or code references.
 
-\subsection*{Part 2: Root Cause}
-The backend assumes required fields exist and does not consistently catch exceptions at the handler boundary. This can leak error names, file paths, line numbers, or stack details.
+\subsection*{Part 2) Why This Works / Root Cause}
+The backend assumes required fields exist and does not consistently catch exceptions at the handler boundary. This can leak diagnostic details to the caller instead of keeping them in internal logs.
 
-\subsection*{Part 3: Environment and Setup}
-The test uses the \texttt{/dvsa/order} endpoint, API Gateway, the affected Lambda handler, CloudWatch, and the imported Lesson 10 source report.
+\subsection*{Part 3) Environment and Setup}
+\begin{itemize}
+\item Region: \texttt{us-east-1}
+\item Components: \texttt{/dvsa/order} endpoint, API Gateway, affected Lambda handler, and CloudWatch
+\item Evidence source: \texttt{vulnerabilities/lesson-10-unhandled-exceptions/report-source.docx}
+\item Supporting artifact: \texttt{redacted-requests.txt}
+\end{itemize}
 
-\subsection*{Part 4: Reproduction Steps}
-Capture a normal order request, remove or alter required fields, send the malformed request, observe the error response, and redact any sensitive details.
+\subsection*{Part 4) Reproduction Steps}
+\begin{enumerate}
+\item Capture a normal order request.
+\item Remove or alter required fields in a controlled malformed request.
+\item Send the malformed request to the order API.
+\item Observe the returned error response.
+\item Redact any sensitive details before storing the evidence.
+\end{enumerate}
 
-\subsection*{Part 5: Evidence and Proof}
-Evidence is stored in \texttt{screenshots/lesson-10/from-report/} with 2 extracted screenshots. The sanitized malformed request shape is stored in \texttt{redacted-requests.txt}.
+\subsection*{Part 5) Evidence and Proof}
+\begin{itemize}
+\item \texttt{screenshots/lesson-10/from-report/} contains 2 extracted screenshots from the source report.
+\item \texttt{vulnerabilities/lesson-10-unhandled-exceptions/redacted-requests.txt} stores the malformed request shape.
+\item The exploit is proven when backend diagnostics are visible to the client instead of remaining only in CloudWatch.
+\end{itemize}
 
-\subsection*{Part 6: Fix Strategy}
+\subsection*{Part 6) Fix Strategy / Probable Mitigation}
 Validate input before business logic and add centralized error handling. Client responses should be generic, while detailed diagnostics remain in CloudWatch.
 
-\subsection*{Part 7: Code / Config Changes}
-Before and after safe error handling notes are stored in \texttt{fixes/lesson-10/}.
+\subsection*{Part 7) Code / Config Changes}
+\begin{itemize}
+\item \texttt{fixes/lesson-10/before-example.txt}: unsafe pre-fix error handling
+\item \texttt{fixes/lesson-10/after-example.txt}: controlled post-fix error handling
+\item \texttt{fixes/lesson-10/explanation.md}: remediation explanation
+\end{itemize}
 
-\subsection*{Part 8: Verification After Fix}
-Repeat the malformed request. The client receives a controlled safe error and backend details remain only in logs.
+\subsection*{Part 8) Verification After Fix}
+Repeat the malformed request. The client should receive a generic safe error, while detailed backend diagnostics remain only in internal logs.
 
-\subsection*{Part 9: Structured Analysis}
-\begin{longtable}{p{0.24\textwidth}p{0.34\textwidth}p{0.28\textwidth}}
-\toprule
-Intended rule & Deviation & Fix verification \\
-\midrule
-Client errors must not expose backend internals. & Diagnostic details were returned to the caller. & Generic safe error returned; detailed log retained internally. \\
-\bottomrule
-\end{longtable}
+\subsection*{Part 9) Structured Operation and Security Analysis}
+\analysistables
+{Lesson 10: Unhandled Exceptions}
+{Client errors must not expose backend internals.}
+{Malformed request sample, source report screenshots, API error evidence, and CloudWatch logging context.}
+{Normal requests return the intended application response without internal diagnostics.}
+{Malformed input returns backend diagnostic details to the caller.}
+{The API exposed implementation details through its public error surface instead of containing them in logs.}
+{Intentional misuse / security-relevant abuse}
+{Input validation and centralized safe error handling in the order handler path.}
+{Malformed requests return generic client-safe errors while detailed diagnostics remain internal.}
 
-\subsection*{Part 10: Takeaway}
+\subsection*{Part 10) Takeaway / Lessons Learned}
 Errors are part of the public interface. Backend diagnostics belong in logs, not in client responses.
 
+\clearpage
 \section*{Final Redaction and Consistency Notes}
+\addcontentsline{toc}{section}{Final Redaction and Consistency Notes}
 
-The text artifacts were checked for common secret patterns. The only AWS secret-like string found in text is the intentional redacted example \texttt{AWS\_SECRET\_ACCESS\_KEY=REDACTED} in the repository README. The submitted evidence should still be visually reviewed before final upload because screenshots can contain values that text scanning cannot inspect reliably.
+Text artifacts in the repository were checked for common secret patterns. The intentional placeholder string \texttt{AWS\_SECRET\_ACCESS\_KEY=REDACTED} appears in the README as an example only. Screenshots and imported report sources should still be visually reviewed before submission because image-based evidence can contain values that simple text scanning cannot inspect.
+
+This repository version is organized so that a grader can move directly from the written report to the lesson folder, the fix artifacts, and the screenshots for the same lesson number.
 
 \end{document}

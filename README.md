@@ -57,6 +57,13 @@ https://<api-id>.execute-api.us-east-1.amazonaws.com/Stage/order
 ## Report and Slides
 - Report: `report/final-report.pdf`
 - Slides: `presentation/slides.pdf`
+- Demo video link: `videos/README.md`
+
+## Assignment Alignment
+- The written report follows the 10-part lesson structure required by `project_description/Project Description.pdf`.
+- Every official lesson has a matching folder under `vulnerabilities/` with `README.md`, `notes.md`, `redacted-requests.txt`, and evidence placeholders or files.
+- Remediation artifacts are grouped under `fixes/lesson-*` as before/after examples, code or policy snippets, and short explanations.
+- The public repository keeps lab secrets redacted and uses placeholder values for URLs, JWTs, AWS account IDs, and credentials.
 
 ## Quick Start for the Grader
 1. Read `report/final-report.pdf` for the narrative summary.
