@@ -1,1 +1,6 @@
-Document the pre-fix event handling logic or configuration here.
+Pre-fix behavior:
+
+- The order API path accepted attacker-controlled serialized input.
+- The backend deserialization path could treat special function markers as executable JavaScript.
+- A crafted request could execute code inside the Lambda runtime before later request processing failed.
+- Evidence should be captured from CloudWatch logs because API Gateway may only show a generic internal error.

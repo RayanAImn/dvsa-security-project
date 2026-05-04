@@ -1,1 +1,5 @@
-Document the pre-fix exception behavior here.
+Pre-fix behavior:
+
+- Malformed or incomplete requests could trigger uncaught backend exceptions.
+- API responses exposed implementation details such as exception names, source file paths, function names, or line numbers.
+- Detailed diagnostic information was returned to the client instead of being limited to internal logs.

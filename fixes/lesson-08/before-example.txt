@@ -1,1 +1,5 @@
-Document the pre-fix business logic issue here.
+Pre-fix behavior:
+
+- The order workflow allowed conflicting billing and update requests to run close together.
+- Billing checked order state and price before the workflow had an atomic lock or conditional update.
+- A race condition could let the final order state differ from the state that was actually billed.

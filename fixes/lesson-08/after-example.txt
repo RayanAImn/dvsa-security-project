@@ -1,1 +1,6 @@
-Document the post-fix business rule enforcement here.
+Post-fix target behavior:
+
+- Use DynamoDB conditional writes or transactions for order state transitions.
+- Prevent item updates after billing begins.
+- Make billing read/check/write operations atomic for a single order.
+- Return a stable rejection when a concurrent update attempts to modify an order in a locked or billed state.

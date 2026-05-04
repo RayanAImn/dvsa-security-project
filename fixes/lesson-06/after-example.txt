@@ -1,1 +1,7 @@
-Document the post-fix rate limiting or resilience controls here.
+Post-fix target behavior:
+
+- API Gateway stage/method throttling is enabled for the DVSA API.
+- Burst and steady-state request rates are limited for the billing path.
+- The billing function should enforce idempotency per order so duplicate billing attempts return a stable response.
+- Excess requests should be throttled or rejected cleanly before they exhaust Lambda capacity.
+- Normal checkout should still work for legitimate users.

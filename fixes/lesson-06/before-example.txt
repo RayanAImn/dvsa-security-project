@@ -1,1 +1,6 @@
-Document the pre-fix load handling here.
+Pre-fix behavior:
+
+- The billing endpoint accepted repeated requests for the same order without effective edge throttling.
+- Parallel requests reached the `DVSA-ORDER-BILLING` Lambda function.
+- Controlled 10-job testing produced mixed success and backend errors, including HTTP 500/502 responses.
+- The failure mode was backend instability rather than a clean throttle/reject response.

@@ -1,1 +1,6 @@
-Document the post-fix authorization behavior here.
+Post-fix target behavior:
+
+- Verify JWT signature and claims before every protected backend action.
+- Require the appropriate admin group/role before invoking `DVSA-ADMIN-UPDATE-ORDERS`.
+- Restrict Lambda invoke permissions so public-facing functions can call only the internal functions they actually need.
+- Validate order state transitions server-side so users cannot mark orders paid outside the billing workflow.

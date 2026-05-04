@@ -1,0 +1,194 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{DVSA Vulnerability Discovery and Remediation}
+\subtitle{ICS-344 Information Security Course Project}
+\author{Team 17}
+\institute{King Fahd University of Petroleum and Minerals}
+\date{Term 252}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\newcommand{\lessonframe}[5]{
+\begin{frame}{#1}
+  \small
+  \begin{block}{Affected Component}
+    #2
+  \end{block}
+  \begin{block}{Root Cause and Impact}
+    #3
+  \end{block}
+  \begin{block}{Evidence}
+    #4
+  \end{block}
+  \begin{block}{Fix and Verification}
+    #5
+  \end{block}
+\end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Project Scope}
+  \begin{itemize}
+    \item Controlled university lab project using OWASP DVSA in a non-production AWS account.
+    \item Required coverage: all 10 official vulnerability lessons.
+    \item Deliverables: written report, presentation slides, repository evidence, fixes, and demo video.
+    \item All sensitive values are redacted: JWTs, AWS account IDs, credentials, emails, and private identifiers.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Serverless Architecture}
+  \begin{itemize}
+    \item Frontend: S3 static website.
+    \item Entry point: API Gateway routes browser and direct API requests.
+    \item Compute: Lambda functions implement order, billing, receipt, and admin workflows.
+    \item Data and services: DynamoDB, S3 receipts, SQS, SES, CloudWatch, CloudTrail, and IAM.
+    \item Main security controls: input validation, JWT verification, authorization, IAM least privilege, throttling, and safe errors.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Methodology}
+  \begin{enumerate}
+    \item Establish the intended normal workflow.
+    \item Capture the request, AWS resource, function, or dependency involved.
+    \item Reproduce the vulnerable behavior in the DVSA lab only.
+    \item Store proof as screenshots, logs, API output, policy simulator results, or report sources.
+    \item Document the fix and repeat the test after remediation.
+    \item Confirm normal behavior still works.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Lesson Coverage Map}
+  \small
+  \begin{tabular}{cll}
+    \toprule
+    No. & Lesson & Primary Evidence Location \\
+    \midrule
+    1 & Event Injection & \texttt{vulnerabilities/lesson-01}, \texttt{report-source.pdf} \\
+    2 & Broken Authentication & \texttt{screenshots/lesson-02/from-report} \\
+    3 & Sensitive Data Exposure & \texttt{vulnerabilities/lesson-03}, \texttt{report-source.pdf} \\
+    4 & Insecure Cloud Configuration & \texttt{screenshots/lesson-04/from-report} \\
+    5 & Broken Access Control & \texttt{screenshots/lesson-05/from-report} \\
+    6 & Denial of Service & \texttt{screenshots/lesson-06} \\
+    7 & Over-Privileged Function & \texttt{screenshots/lesson-07} \\
+    8 & Logic Vulnerability & \texttt{screenshots/lesson-08/from-report} \\
+    9 & Vulnerable Dependencies & \texttt{vulnerabilities/lesson-09}, \texttt{report-source.pdf} \\
+    10 & Unhandled Exceptions & \texttt{screenshots/lesson-10/from-report} \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\lessonframe
+{Lesson 1: Event Injection}
+{API Gateway request path and order-processing Lambda.}
+{Unsafe deserialization or dynamic input handling can treat request data as executable behavior inside Lambda. Impact: backend code execution in the lab function context.}
+{Redacted payload in \texttt{redacted-requests.txt}; Lesson 1/9 report-source PDF; CloudWatch proof is the key evidence source when API Gateway returns a generic error.}
+{Remove unsafe deserialization, use strict JSON parsing and schema validation, then repeat the payload and confirm it is rejected without backend execution.}
+
+\lessonframe
+{Lesson 2: Broken Authentication}
+{JWT-based order API identity handling.}
+{The backend trusts decoded JWT claims without proving token integrity. Impact: forged claims can impersonate another user and access order data.}
+{Imported DOCX report plus 8 extracted screenshots under \texttt{screenshots/lesson-02/from-report}.}
+{Verify JWT signature, issuer, audience, expiry, and subject. Re-test forged token: it must fail while valid user tokens still work.}
+
+\lessonframe
+{Lesson 3: Sensitive Data Exposure}
+{Receipt/data exposure path involving API output, S3, and backend receipt handling.}
+{Receipt data or links are exposed without sufficient ownership checks. Impact: private receipt or account-related data can be visible outside the intended boundary.}
+{Lesson 3 report-source PDF and sanitized response sample in \texttt{redacted-requests.txt}.}
+{Add ownership checks, keep S3 objects private, and generate short-lived links only after authorization. Verify unauthorized access fails.}
+
+\lessonframe
+{Lesson 4: Insecure Cloud Configuration}
+{S3 receipt bucket and receipt-processing Lambda trigger.}
+{Bucket access or object-processing trust is too permissive. Impact: untrusted objects can enter a trusted backend workflow.}
+{Imported DOCX report plus 12 extracted screenshots under \texttt{screenshots/lesson-04/from-report}.}
+{Enable Block Public Access, restrict bucket policy/ACLs, validate object keys and sources, then verify unauthorized upload/access fails.}
+
+\lessonframe
+{Lesson 5: Broken Access Control}
+{Administrative order update workflow and Lambda invocation permissions.}
+{A valid normal user context can reach privileged order-update behavior without required role checks. Impact: unauthorized order state modification.}
+{Imported DOCX report plus 3 extracted screenshots under \texttt{screenshots/lesson-05/from-report}.}
+{Enforce admin group/role checks and narrow Lambda invoke permissions. Verify normal-user admin update attempts are denied.}
+
+\lessonframe
+{Lesson 6: Denial of Service}
+{Billing action on \texttt{/dvsa/order} and \texttt{DVSA-ORDER-BILLING}.}
+{Duplicate or concurrent billing bursts are not controlled enough. Impact: availability degradation and backend HTTP 500/502 failures during controlled parallel testing.}
+{8 screenshots under \texttt{screenshots/lesson-06}, including PowerShell results, CloudWatch logs, Lambda metrics, and API Gateway throttling.}
+{Apply API Gateway throttling and backend idempotency/rate controls. Verify excess requests degrade safely and normal checkout works.}
+
+\lessonframe
+{Lesson 7: Over-Privileged Function}
+{\texttt{DVSA-SEND-RECEIPT-EMAIL} Lambda execution role.}
+{The role grants broader permissions than the receipt workflow requires. Impact: increased blast radius if the function is abused.}
+{10 screenshots under \texttt{screenshots/lesson-07}, including Lambda role, broad SES evidence, IAM Policy Simulator, and post-fix workflow.}
+{Replace broad policies with least-privilege IAM. Verify unrelated actions are denied and normal order/receipt behavior still works.}
+
+\lessonframe
+{Lesson 8: Logic Vulnerability}
+{Order billing/update state machine and DynamoDB order records.}
+{Billing and update operations can race because state transitions are not atomic. Impact: final order state can differ from what was billed.}
+{Imported DOCX report plus 13 extracted screenshots under \texttt{screenshots/lesson-08/from-report}.}
+{Use DynamoDB conditional writes or transactions and lock updates once billing begins. Verify conflicting operations are rejected.}
+
+\lessonframe
+{Lesson 9: Vulnerable Dependencies}
+{Node.js Lambda package/dependency path.}
+{An unsafe dependency enables dangerous deserialization behavior. Impact: dependency behavior supports event injection risk.}
+{Lesson 1/9 report-source PDF and sanitized dependency note in \texttt{redacted-requests.txt}.}
+{Remove or replace risky packages, pin reviewed versions, and scan dependencies. Verify injection no longer executes and scan is clean.}
+
+\lessonframe
+{Lesson 10: Unhandled Exceptions}
+{Malformed input handling in the order API/Lambda path.}
+{Missing validation and handler-level exception control leak implementation details. Impact: file paths, exception names, or code references may appear in responses.}
+{Imported DOCX report plus 2 extracted screenshots under \texttt{screenshots/lesson-10/from-report}.}
+{Validate required fields and centralize safe error handling. Verify malformed requests return generic client-safe errors only.}
+
+\begin{frame}{Repository Completeness}
+  \begin{itemize}
+    \item Every lesson folder has \texttt{README.md}, \texttt{notes.md}, \texttt{redacted-requests.txt}, and evidence subfolders.
+    \item Every fix folder has before/after artifacts and explanation files.
+    \item Lessons 1, 3, and 9 include PDF report sources.
+    \item Lessons 2, 4, 5, 8, and 10 include DOCX report sources and extracted screenshots.
+    \item Lessons 6 and 7 include direct screenshot evidence from the controlled tests and AWS Console.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Remediation Themes Across All Lessons}
+  \begin{itemize}
+    \item Strict input validation and safe parsing.
+    \item Verified authentication and server-side authorization.
+    \item Least-privilege IAM for Lambda execution roles.
+    \item Secure S3 configuration and private receipt access.
+    \item Atomic workflow updates for state-sensitive operations.
+    \item API throttling, idempotency, and safe error handling.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Final Takeaways}
+  \begin{itemize}
+    \item DVSA shows that serverless risk often appears between AWS services, IAM, and workflow logic.
+    \item Good evidence connects intended behavior, exploit behavior, fix, and post-fix verification.
+    \item The same controls repeat across lessons: validate, verify, authorize, limit permissions, throttle, and log safely.
+    \item Repository artifacts must stay redacted and organized so the grader can follow each lesson quickly.
+  \end{itemize}
+\end{frame}
+
+\end{document}

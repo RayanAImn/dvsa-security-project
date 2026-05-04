@@ -1,1 +1,6 @@
-Document the hardened cloud configuration here.
+Post-fix target behavior:
+
+- Enable S3 Block Public Access for the receipt bucket.
+- Restrict bucket policy and ACLs so only the intended DVSA roles can write receipt objects.
+- Validate object key prefixes, file extensions, and object source before Lambda processing.
+- Keep receipt objects private and expose them only through authorized, short-lived access paths.

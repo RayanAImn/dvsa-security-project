@@ -1,1 +1,5 @@
-Document the pre-fix exposed data path here.
+Pre-fix behavior:
+
+- Receipt-related data or generated receipt links could be exposed outside the intended authorization boundary.
+- A user could obtain or access receipt information that should only be available to the owning user or authorized workflow.
+- Sensitive S3 receipt objects were not sufficiently protected by server-side authorization checks.

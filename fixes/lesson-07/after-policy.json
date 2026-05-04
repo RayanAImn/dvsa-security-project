@@ -1,8 +1,24 @@
 {
-  "Effect": "Allow",
-  "Action": [
-    "ses:SendEmail",
-    "ses:SendRawEmail"
-  ],
-  "Resource": "*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReceiptEmailSendingOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail"
+      ],
+      "Resource": "arn:aws:ses:us-east-1:<ACCOUNT_ID>:identity/<VERIFIED_SENDER_OR_DOMAIN>"
+    },
+    {
+      "Sid": "AllowFunctionLogging",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:us-east-1:<ACCOUNT_ID>:log-group:/aws/lambda/DVSA-SEND-RECEIPT-EMAIL:*"
+    }
+  ]
 }

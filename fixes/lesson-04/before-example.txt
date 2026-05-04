@@ -1,1 +1,5 @@
-Document the insecure cloud configuration here.
+Pre-fix behavior:
+
+- The receipt S3 bucket allowed unsafe object exposure or upload behavior.
+- Public-access controls and bucket policy/ACL settings were too permissive for a trusted receipt workflow.
+- The receipt Lambda processed objects from the bucket without sufficiently proving that they came from the legitimate application path.

@@ -1,1 +1,6 @@
-Document the upgraded dependency version here.
+Post-fix target behavior:
+
+- Remove the unsafe deserialization dependency from request-processing paths.
+- Replace it with safe JSON parsing and explicit schema validation.
+- Pin dependency versions and scan them during development/deployment.
+- Rebuild and redeploy Lambda packages only after dependency review passes.

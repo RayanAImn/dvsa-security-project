@@ -1,1 +1,6 @@
-Document the post-fix masking, encryption, or filtering change here.
+Post-fix target behavior:
+
+- Require a verified user identity before generating or returning receipt data.
+- Check that the requested receipt belongs to the authenticated user or to an authorized administrative role.
+- Generate short-lived signed URLs only after the ownership/authorization check succeeds.
+- Avoid logging or returning full sensitive receipt contents in client responses.

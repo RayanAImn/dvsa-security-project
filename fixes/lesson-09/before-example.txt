@@ -1,1 +1,5 @@
-Document the vulnerable dependency version here.
+Pre-fix behavior:
+
+- The Lambda deployment included an unsafe dependency capable of deserializing function-like input.
+- The dependency behavior contributed to the event injection/RCE-style lesson.
+- Dependency versions were not sufficiently reviewed, pinned, or scanned before deployment.

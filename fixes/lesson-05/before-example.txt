@@ -1,1 +1,5 @@
-Document the pre-fix authorization behavior here.
+Pre-fix behavior:
+
+- A normal user could reach an administrative order-update path through the backend workflow.
+- The backend trusted a valid user token without checking for the required administrative group/role.
+- The public-facing function could invoke privileged internal functionality without strict authorization.

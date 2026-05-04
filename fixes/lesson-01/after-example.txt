@@ -1,1 +1,6 @@
-Document the post-fix event validation logic or configuration here.
+Post-fix target behavior:
+
+- Replace unsafe deserialization with normal JSON parsing.
+- Reject unexpected fields and function-like serialized markers with an allowlisted request schema.
+- Treat all request data as data, never as code.
+- Keep detailed parsing errors in CloudWatch while returning only client-safe error messages.
