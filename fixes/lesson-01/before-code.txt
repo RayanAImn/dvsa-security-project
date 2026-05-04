@@ -1,3 +1,4 @@
+//location is DVSA-ORDER-MANAGER -> order-manager.js
 const serialize = require('node-serialize');
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const { CognitoIdentityProviderClient, AdminGetUserCommand } = require("@aws-sdk/client-cognito-identity-provider");
