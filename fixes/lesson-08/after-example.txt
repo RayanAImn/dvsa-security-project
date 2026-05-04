@@ -4,3 +4,19 @@ Post-fix target behavior:
 - Prevent item updates after billing begins.
 - Make billing read/check/write operations atomic for a single order.
 - Return a stable rejection when a concurrent update attempts to modify an order in a locked or billed state.
+
+Fixed pattern:
+
+```python
+response = table.update_item(
+    Key=key,
+    UpdateExpression=update_expression,
+    ConditionExpression='orderStatus < :maxstatus',
+    ExpressionAttributeValues={
+        **expression_attributes,
+        ':maxstatus': 120
+    }
+)
+```
+
+DynamoDB now rejects the update if another request has already changed the order to a non-billable state.

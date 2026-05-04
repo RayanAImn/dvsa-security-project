@@ -3,3 +3,15 @@ Pre-fix behavior:
 - The order workflow allowed conflicting billing and update requests to run close together.
 - Billing checked order state and price before the workflow had an atomic lock or conditional update.
 - A race condition could let the final order state differ from the state that was actually billed.
+
+Vulnerable pattern:
+
+```python
+response = table.update_item(
+    Key=key,
+    UpdateExpression=update_expression,
+    ExpressionAttributeValues=expression_attributes
+)
+```
+
+The update writes payment details without proving that `orderStatus` is still in the expected billable state at write time.
