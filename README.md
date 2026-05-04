@@ -24,7 +24,7 @@ https://<api-id>.execute-api.us-east-1.amazonaws.com/Stage/order
 ```
 
 ## Repository Structure
-- `report/`: final report export and editable source placeholders.
+- `report/`: final report PDF and editable LaTeX source.
 - `presentation/`: slide deck export and presentation source material.
 - `vulnerabilities/`: lesson-by-lesson documentation, evidence, requests, and notes.
 - `fixes/`: before/after code or configuration snapshots with explanations.
